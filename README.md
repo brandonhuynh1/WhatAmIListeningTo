@@ -1,3 +1,22 @@
+# WhatAmIListeningTo ??
+
+This project is a simple web app to display the last song you were listening to on Spotify.
+
+Made while listening to my [**Off my 9-5**](https://open.spotify.com/playlist/5VJQMLAi7fzAA8geDa05cc?si=7f4bfca129304606) playlist !
+
+## Initial Requirements
+
+- [] Display the current song you are listening to on Spotify
+- [] Display the last song you are listening to on Spotify (if not currently listening)
+- [] Mobile friendly 
+
+- [] Animation to change songs if current call changes
+- [] Create a simple email sign up to generate your own link (links to your Spotify)
+- [] Shorten URL for easy instagram bio listening
+
+
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
