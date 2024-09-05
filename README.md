@@ -7,8 +7,8 @@ Made while listening to my [**Off my 9-5**](https://open.spotify.com/playlist/5V
 ## Initial Requirements
 
 - [X] Display the current song you are listening to on Spotify
-- [] Display the last song you are listening to on Spotify (if not currently listening)
-- [] Mobile friendly 
+- [X] Display the last song you are listening to on Spotify (if not currently listening)
+- [X] Mobile friendly 
 
 - [] Animation to change songs if current call changes
 - [] Create a simple email sign up to generate your own link (links to your Spotify)
