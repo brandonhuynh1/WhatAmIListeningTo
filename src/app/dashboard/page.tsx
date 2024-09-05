@@ -2,23 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-
-interface UserProfile {
-  display_name: string;
-  images: { url: string }[];
-  followers: { total: number };
-}
-
-interface Track {
-  name: string;
-  artists: { name: string }[];
-  album: { name: string; images: { url: string }[] };
-}
-
-interface CurrentlyPlaying {
-  is_playing: boolean;
-  item: Track | null;
-}
+import {
+  UserProfile,
+  CurrentlyPlaying,
+  Track,
+  fetchUserData,
+  refreshAccessToken,
+} from "@/lib/spotify";
 
 export default function Dashboard() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -38,18 +28,21 @@ export default function Dashboard() {
     if (token && refresh) {
       setAccessToken(token);
       setRefreshToken(refresh);
-      fetchUserData(token);
+      handleFetchUserData(token);
     }
   }, [searchParams]);
 
-  const fetchUserData = async (token: string) => {
+  const handleFetchUserData = async (token: string) => {
     try {
-      await fetchUserProfile(token);
-      await fetchCurrentlyPlayingTrack(token);
-      await fetchRecentlyPlayedTracks(token);
+      const { profile, currentTrack, recentTracks } = await fetchUserData(
+        token
+      );
+      setProfile(profile);
+      setCurrentTrack(currentTrack);
+      setRecentTracks(recentTracks);
     } catch (err) {
       if (err instanceof Error && err.message === "Token expired") {
-        await refreshAccessToken();
+        await handleRefreshToken();
       } else {
         setError("Failed to fetch user data");
         console.error(err);
@@ -57,63 +50,16 @@ export default function Dashboard() {
     }
   };
 
-  const refreshAccessToken = async () => {
+  const handleRefreshToken = async () => {
     try {
-      const response = await fetch("/api/auth/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      if (!response.ok) throw new Error("Failed to refresh token");
-      const data = await response.json();
-      setAccessToken(data.access_token);
-      fetchUserData(data.access_token);
+      const newAccessToken = await refreshAccessToken(refreshToken!);
+      setAccessToken(newAccessToken);
+      await handleFetchUserData(newAccessToken);
     } catch (err) {
       setError("Failed to refresh access token");
       console.error(err);
       router.push("/"); // Redirect to home page for re-authentication
     }
-  };
-
-  const fetchUserProfile = async (token: string) => {
-    const response = await fetch("https://api.spotify.com/v1/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (response.status === 401) throw new Error("Token expired");
-    if (!response.ok) throw new Error("Failed to fetch user profile");
-    const data: UserProfile = await response.json();
-    setProfile(data);
-  };
-
-  const fetchCurrentlyPlayingTrack = async (token: string) => {
-    const response = await fetch(
-      "https://api.spotify.com/v1/me/player/currently-playing",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    if (response.status === 401) throw new Error("Token expired");
-    if (response.status === 204) {
-      setCurrentTrack({ is_playing: false, item: null });
-    } else if (response.ok) {
-      const data: CurrentlyPlaying = await response.json();
-      setCurrentTrack(data);
-    } else {
-      throw new Error("Failed to fetch currently playing track");
-    }
-  };
-
-  const fetchRecentlyPlayedTracks = async (token: string) => {
-    const response = await fetch(
-      "https://api.spotify.com/v1/me/player/recently-played?limit=5",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    if (response.status === 401) throw new Error("Token expired");
-    if (!response.ok) throw new Error("Failed to fetch recently played tracks");
-    const data = await response.json();
-    setRecentTracks(data.items.map((item: any) => item.track));
   };
 
   if (error)
@@ -147,7 +93,7 @@ export default function Dashboard() {
                 alt="Album Cover"
                 className={`w-48 h-48 rounded-full object-cover ${
                   currentTrack.is_playing ? "animate-spin-slow" : ""
-                }`} // Apply spin animation conditionally
+                }`}
               />
             </div>
             <p className="mt-4 text-lg font-medium">
