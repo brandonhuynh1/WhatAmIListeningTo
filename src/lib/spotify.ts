@@ -45,7 +45,7 @@ async function fetchUserProfile(token: string): Promise<UserProfile> {
   return await response.json();
 }
 
-async function fetchCurrentlyPlayingTrack(token: string): Promise<CurrentlyPlaying> {
+export async function fetchCurrentlyPlayingTrack(token: string): Promise<CurrentlyPlaying> {
   const response = await fetch(
     "https://api.spotify.com/v1/me/player/currently-playing",
     {
