@@ -1,3 +1,4 @@
+// src/app/api/spotify-events/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { fetchCurrentlyPlayingTrack } from '@/lib/spotify';
 

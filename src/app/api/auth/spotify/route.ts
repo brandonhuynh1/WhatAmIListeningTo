@@ -1,3 +1,4 @@
+// src/app/api/auth/spotify/route.ts
 import { NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;

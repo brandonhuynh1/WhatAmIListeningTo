@@ -1,3 +1,5 @@
+// src/app/dashboard/page.tsx
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -10,6 +12,7 @@ import {
   refreshAccessToken,
 } from "@/lib/spotify";
 import SpotifyDashboard from "@/components/SpotifyDashboard";
+import SpotifyDashboardSkeleton from "@/components/SpotifyDashboardSkeleton";
 
 export default function Dashboard() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -19,24 +22,25 @@ export default function Dashboard() {
     null
   );
   const [recentTracks, setRecentTracks] = useState<Track[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const handleFetchUserData = useCallback(async (token: string) => {
     try {
+      setIsLoading(true);
       const { profile, currentTrack, recentTracks } = await fetchUserData(
         token
       );
       setProfile(profile);
       setCurrentTrack(currentTrack);
       setRecentTracks(recentTracks);
+      setIsLoading(false);
     } catch (err) {
       if (err instanceof Error && err.message === "Token expired") {
         await handleRefreshToken();
       } else {
-        setError("Failed to fetch user data");
-        console.error(err);
+        throw new Error("Failed to fetch user data");
       }
     }
   }, []);
@@ -47,9 +51,7 @@ export default function Dashboard() {
       setAccessToken(newAccessToken);
       await handleFetchUserData(newAccessToken);
     } catch (err) {
-      setError("Failed to refresh access token");
-      console.error(err);
-      router.push("/"); // Redirect to home page for re-authentication
+      throw new Error("Failed to refresh access token");
     }
   };
 
@@ -60,8 +62,10 @@ export default function Dashboard() {
       setAccessToken(token);
       setRefreshToken(refresh);
       handleFetchUserData(token);
+    } else {
+      setIsLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, handleFetchUserData]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -75,7 +79,6 @@ export default function Dashboard() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Received data:", data);
         if (data.currentTrack) {
           setCurrentTrack(data.currentTrack);
         }
@@ -85,15 +88,13 @@ export default function Dashboard() {
     };
 
     fetchCurrentTrack();
-    const intervalId = setInterval(fetchCurrentTrack, 500);
+    const intervalId = setInterval(fetchCurrentTrack, 5000);
 
     return () => clearInterval(intervalId);
   }, [accessToken]);
 
-  if (error)
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  if (!profile || currentTrack === null)
-    return <div className="text-center">Loading...</div>;
+  if (isLoading) return <SpotifyDashboardSkeleton />;
+  if (!profile || currentTrack === null) return <SpotifyDashboardSkeleton />;
 
   return (
     <SpotifyDashboard
@@ -102,68 +103,69 @@ export default function Dashboard() {
       recentTracks={recentTracks}
     />
   );
-
-  // return (
-  //   <div className="p-6 md:p-8 lg:p-12 flex flex-col items-center">
-  //     <div className="text-center mb-6">
-  //       <h1 className="text-2xl font-bold mb-2">
-  //         Welcome, {profile.display_name}!
-  //       </h1>
-  //       {profile.images[0] && (
-  //         <img
-  //           src={profile.images[0].url}
-  //           alt="Profile"
-  //           className="w-24 h-24 rounded-full mx-auto object-cover"
-  //         />
-  //       )}
-  //       <p className="text-gray-600">Followers: {profile.followers.total}</p>
-  //     </div>
-
-  //     <div className="text-center mb-12 w-full max-w-2xl">
-  //       <h2 className="text-3xl font-semibold mb-8">Currently Playing</h2>
-  //       {currentTrack.is_playing && currentTrack.item ? (
-  //         <div className="flex flex-col items-center">
-  //           <div className="relative w-64 h-64 mb-8">
-  //             <img
-  //               src={currentTrack.item.album.images[0].url}
-  //               alt="Album Cover"
-  //               className={`w-64 h-64 rounded-full object-cover shadow-lg ${
-  //                 currentTrack.is_playing ? "animate-spin-slow" : ""
-  //               }`}
-  //             />
-  //           </div>
-  //           <p className="text-2xl font-medium mb-2">
-  //             <strong>{currentTrack.item.name}</strong>
-  //           </p>
-  //           <p className="text-xl text-gray-700 mb-2">
-  //             by{" "}
-  //             {currentTrack.item.artists
-  //               .map((artist) => artist.name)
-  //               .join(", ")}
-  //           </p>
-  //           <p className="text-lg text-gray-600">
-  //             Album: {currentTrack.item.album.name}
-  //           </p>
-  //         </div>
-  //       ) : (
-  //         <p className="italic text-xl">Not currently playing any track</p>
-  //       )}
-  //     </div>
-
-  //     <div className="w-full max-w-2xl">
-  //       <h2 className="text-2xl font-semibold mb-4">Recently Played Tracks</h2>
-  //       <ul className="list-disc pl-6">
-  //         {recentTracks.map((track, index) => (
-  //           <li key={index} className="mb-4">
-  //             <p className="font-medium">{track.name}</p>
-  //             <p className="text-sm text-gray-600">
-  //               by {track.artists.map((artist) => artist.name).join(", ")}
-  //             </p>
-  //             <p className="text-sm text-gray-500">Album: {track.album.name}</p>
-  //           </li>
-  //         ))}
-  //       </ul>
-  //     </div>
-  //   </div>
-  // );
 }
+
+// return (
+//   <div className="p-6 md:p-8 lg:p-12 flex flex-col items-center">
+//     <div className="text-center mb-6">
+//       <h1 className="text-2xl font-bold mb-2">
+//         Welcome, {profile.display_name}!
+//       </h1>
+//       {profile.images[0] && (
+//         <img
+//           src={profile.images[0].url}
+//           alt="Profile"
+//           className="w-24 h-24 rounded-full mx-auto object-cover"
+//         />
+//       )}
+//       <p className="text-gray-600">Followers: {profile.followers.total}</p>
+//     </div>
+
+//     <div className="text-center mb-12 w-full max-w-2xl">
+//       <h2 className="text-3xl font-semibold mb-8">Currently Playing</h2>
+//       {currentTrack.is_playing && currentTrack.item ? (
+//         <div className="flex flex-col items-center">
+//           <div className="relative w-64 h-64 mb-8">
+//             <img
+//               src={currentTrack.item.album.images[0].url}
+//               alt="Album Cover"
+//               className={`w-64 h-64 rounded-full object-cover shadow-lg ${
+//                 currentTrack.is_playing ? "animate-spin-slow" : ""
+//               }`}
+//             />
+//           </div>
+//           <p className="text-2xl font-medium mb-2">
+//             <strong>{currentTrack.item.name}</strong>
+//           </p>
+//           <p className="text-xl text-gray-700 mb-2">
+//             by{" "}
+//             {currentTrack.item.artists
+//               .map((artist) => artist.name)
+//               .join(", ")}
+//           </p>
+//           <p className="text-lg text-gray-600">
+//             Album: {currentTrack.item.album.name}
+//           </p>
+//         </div>
+//       ) : (
+//         <p className="italic text-xl">Not currently playing any track</p>
+//       )}
+//     </div>
+
+//     <div className="w-full max-w-2xl">
+//       <h2 className="text-2xl font-semibold mb-4">Recently Played Tracks</h2>
+//       <ul className="list-disc pl-6">
+//         {recentTracks.map((track, index) => (
+//           <li key={index} className="mb-4">
+//             <p className="font-medium">{track.name}</p>
+//             <p className="text-sm text-gray-600">
+//               by {track.artists.map((artist) => artist.name).join(", ")}
+//             </p>
+//             <p className="text-sm text-gray-500">Album: {track.album.name}</p>
+//           </li>
+//         ))}
+//       </ul>
+//     </div>
+//   </div>
+// );
+// }
