@@ -13,8 +13,8 @@ datasource db {
 model User {
   id           String   @id @default(uuid())
   phoneNumber  String   @unique
-  accessToken  String
-  refreshToken String
+  accessToken  String?
+  refreshToken String?
   uniqueUrl    String   @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
