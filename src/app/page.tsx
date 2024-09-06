@@ -26,33 +26,33 @@ export default function Home() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
-        <h1 className="text-3xl font-extrabold text-gray-800 text-center mb-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 sm:p-8 md:p-10 flex items-center justify-center">
+      <div className="max-w-[90rem] mx-auto text-center">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-green-500">
           What Am I Listening To?
         </h1>
 
-        <h2 className="text-xl font-semibold text-gray-800 text-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-300">
           Share what you're listening to with your friends.
         </h2>
 
-        <p className="text-gray-600 text-center mb-8">
+        <p className="text-xl sm:text-2xl text-gray-400 mb-12">
           Log in with Spotify to start using the app.
         </p>
 
         <button
           onClick={handleLogin}
           disabled={isLoading}
-          className={`w-full py-2 px-4 rounded-lg font-semibold text-white transition-colors ${
+          className={`py-3 px-8 rounded-full font-semibold text-lg sm:text-xl transition-colors ${
             isLoading
-              ? "bg-gray-400 cursor-not-allowed"
+              ? "bg-gray-600 cursor-not-allowed"
               : "bg-green-500 hover:bg-green-600"
           }`}
         >
           {isLoading ? (
             <span className="flex items-center justify-center">
               <svg
-                className="animate-spin h-5 w-5 mr-3 text-white"
+                className="animate-spin h-6 w-6 mr-3 text-white"
                 viewBox="0 0 24 24"
               >
                 <circle
@@ -70,7 +70,7 @@ export default function Home() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Redirecting...
+              Connecting to Spotify...
             </span>
           ) : (
             "Login with Spotify"
